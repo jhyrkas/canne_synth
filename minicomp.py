@@ -139,7 +139,7 @@ outsig[:len(intro_walk)//4,1] += intro_pred[3*len(intro_walk)//4:]
 
 outro_sig = np.zeros((44100*5,2))
 fake_signal = cu.make_note_osc(note1, 5)
-outro_pred = cu.predict_audio(fake_signal, feedback_rate=1.0, use_prev_frame=True)
+outro_pred = cu.predict_audio(fake_signal, feedback_rate=0.9, use_prev_frame=True)
 outro_sig[:len(outro_pred),0] = 0.33*outro_pred*np.linspace(2, 0, len(outro_pred))
 outro_sig[:len(outro_pred),1] = 0.66*outro_pred*np.linspace(2, 0, len(outro_pred))
 
