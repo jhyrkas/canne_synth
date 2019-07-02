@@ -59,9 +59,7 @@ class ComposeUtility :
                 in_frame = ((1.0 - feedback_rate) * input_frames[:,i].reshape(1, input_frames.shape[0])) + \
                     (feedback_rate * feedback_frame)
                 mag_buf[:,i] = self.synth.generate_audio(
-                #    in_frame, bass_boost = True, full_mode = True, middle_weights = params)
-                    input_frames[:,i].reshape(1, input_frames.shape[0]),
-                    bass_boost = True, full_mode = True, middle_weights = params)
+                    in_frame, bass_boost = True, full_mode = True, middle_weights = params)
                 feedback_frame = np.copy(mag_buf[:,i].reshape(1, input_frames.shape[0]))
                 feedback_frame /= np.max(np.abs(feedback_frame))
         else :
