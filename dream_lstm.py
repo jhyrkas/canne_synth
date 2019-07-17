@@ -27,7 +27,8 @@ class TimeDomainLSTM :
             LSTM(segment_length, dropout = input_dropout, \
                  recurrent_dropout = recurrent_dropout, input_shape=(None,self.x.shape[1])))
         self.model.add(Dense(1)) # output shape of 1
-        self.model.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])
+        # dream uses squared error, but not sure when range is [-1 1]
+        self.model.compile(optimizer='adam', loss='mean_absolute_error', metrics=['accuracy'])
 
     def train_model(self, num_epochs) :
         data = self.x.reshape(self.x.shape[0], 1, self.x.shape[1])
