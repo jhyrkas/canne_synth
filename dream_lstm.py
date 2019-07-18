@@ -5,6 +5,7 @@ from tensorflow.keras.layers import LSTM,  Dense
 
 class TimeDomainLSTM :
     def __init__(self, input_audio, segment_length, input_dropout = 0.0, recurrent_dropout = 0.0) :
+        self.seed_size = segment_length
         self.create_training(input_audio, segment_length)
         self.create_model(segment_length, input_dropout, recurrent_dropout)
         
@@ -28,8 +29,19 @@ class TimeDomainLSTM :
                  recurrent_dropout = recurrent_dropout, input_shape=(None,self.x.shape[1])))
         self.model.add(Dense(1)) # output shape of 1
         # dream uses squared error, but not sure when range is [-1 1]
-        self.model.compile(optimizer='adam', loss='mean_absolute_error', metrics=['accuracy'])
+        self.model.compile(optimizer='adam', loss='mean_absolute_error')
 
     def train_model(self, num_epochs) :
         data = self.x.reshape(self.x.shape[0], 1, self.x.shape[1])
-        self.model.fit(data, self.y, num_epochs)
+        self.model.fit(data, self.y, epochs=num_epochs)
+
+    def dream(self, seed, num_samples) :
+        seed = seed.reshape(1, 1, self.seed_size)
+        samples = np.zeros(num_samples)
+        for i in range(num_samples) :
+            pred = self.model.predict(seed)
+            samples[i] = pred
+            seed[0,0,0:-1] = seed[0, 0, 1:]
+            seed[0, 0, -1] = pred
+
+        return samples
