@@ -37,7 +37,7 @@ class TimeDomainLSTM :
         data = self.x.reshape(self.x.shape[0], 1, self.x.shape[1])
         for i in range(num_epochs) :
             print('epoch #' + str(i+1))
-            self.model.fit(data, self.y, epochs=1)
+            self.model.fit(data, self.y, epochs=1, batch_size=1)
             self.reset_model()
 
     def dream(self, seed, num_samples) :
