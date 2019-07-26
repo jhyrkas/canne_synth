@@ -26,16 +26,22 @@ class TimeDomainLSTM :
         self.model = Sequential()
         self.model.add(
             LSTM(segment_length, dropout = input_dropout, \
-                 recurrent_dropout = recurrent_dropout, input_shape=(None,self.x.shape[1])))
+                 recurrent_dropout = recurrent_dropout, input_shape=(None,self.x.shape[1]),
+                 stateful = True)
+            )
         self.model.add(Dense(1)) # output shape of 1
         # dream uses squared error, but not sure when range is [-1 1]
         self.model.compile(optimizer='adam', loss='mean_absolute_error')
 
     def train_model(self, num_epochs) :
         data = self.x.reshape(self.x.shape[0], 1, self.x.shape[1])
-        self.model.fit(data, self.y, epochs=num_epochs)
+        for i in range(num_epochs) :
+            print('epoch #' + str(i+1))
+            self.model.fit(data, self.y, epochs=1)
+            self.reset_model()
 
     def dream(self, seed, num_samples) :
+        self.reset_model()
         seed = seed.reshape(1, 1, self.seed_size)
         samples = np.zeros(num_samples)
         for i in range(num_samples) :
@@ -44,4 +50,9 @@ class TimeDomainLSTM :
             seed[0,0,0:-1] = seed[0, 0, 1:]
             seed[0, 0, -1] = pred
 
+        self.reset_model()
         return samples
+
+    # use for stateful LSTMS, either before training or before dreaming
+    def reset_model(self) :
+        self.model.reset_states()
