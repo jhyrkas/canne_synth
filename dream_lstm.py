@@ -26,7 +26,7 @@ class TimeDomainLSTM :
         self.model = Sequential()
         # trying with two LSTMs
         self.model.add(
-            LSTM(segment_length, dropout = input_dropout, \
+            LSTM(segment_length, dropout = input_dropout, return_sequences = True, \
                  recurrent_dropout = recurrent_dropout, input_shape=(None,self.x.shape[1]))
             )
         self.model.add(
@@ -39,7 +39,7 @@ class TimeDomainLSTM :
 
     def train_model(self, num_epochs) :
         data = self.x.reshape(self.x.shape[0], 1, self.x.shape[1])
-        self.model.fit(self.y[0:data.shape[0] - mod,:], epochs=num_epochs)
+        self.model.fit(data, self.y, epochs=num_epochs)
 
     def dream(self, seed, num_samples) :
         seed = seed.reshape(1, 1, self.seed_size)
