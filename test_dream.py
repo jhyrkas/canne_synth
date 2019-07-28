@@ -39,10 +39,10 @@ print(sig_mono.shape)
 
 temp = dream_lstm.TimeDomainLSTM(sig_mono[0:44100*15], 1024, 0.1, 0.05)
 print('training!')
-temp.train_model(50)
+temp.train_model(20)
 print('dreaming!')
 #samples = temp.dream(temp.x[0,:], 44100*10)
-samples = temp.dream(temp.x[0,:])
+samples = temp.dream(temp.x[0,:], 44100*10)
 samples = samples / np.max(np.abs(samples))
 
 wf_write = wave.open('dream.wav', 'w')
