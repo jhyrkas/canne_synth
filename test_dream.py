@@ -3,21 +3,22 @@ import dream_lstm
 #import soundfile as sf
 import wave
 from struct import pack, unpack
+from random import shuffle
 
 # STEREO TEST
-#wf_read = wave.open( 'minicomp.wav', 'rb')
-#fs = wf_read.getframerate()
-#size = wf_read.getnframes()
-#tmp_sig = [[0] * size, [0] * size]
-#for i in range(size) :
-#    a,b = unpack('hh', wf_read.readframes(1))
-#    tmp_sig[0][i] = a
-#    tmp_sig[1][i] = b
+wf_read = wave.open( 'minicomp.wav', 'rb')
+fs = wf_read.getframerate()
+size = wf_read.getnframes()
+tmp_sig = [[0] * size, [0] * size]
+for i in range(size) :
+    a,b = unpack('hh', wf_read.readframes(1))
+    tmp_sig[0][i] = a
+    tmp_sig[1][i] = b
 
-#sig = np.array(tmp_sig)
-#sig = sig / 2**15
-#sig_mono = np.mean(sig, axis=0)
-#wf_read.close()
+sig = np.array(tmp_sig)
+sig = sig / 2**15
+sig_mono = np.mean(sig, axis=0)
+wf_read.close()
 
 # MONO TEST
 #wf_read = wave.open( 'second_input_16bit.wav', 'rb')
@@ -30,7 +31,7 @@ from struct import pack, unpack
 #wf_read.close()
 
 # SIN WAVE TEST
-sig_mono = np.sin(2*np.pi*440.0*np.array(range(44100*15))/44100)
+#sig_mono = np.sin(2*np.pi*440.0*np.array(range(44100*15))/44100)
 
 #[sig, fs] = sf.read('minicomp.wav')
 #sig_mono = np.mean(sig, axis=1)
@@ -38,8 +39,17 @@ sig_mono = np.sin(2*np.pi*440.0*np.array(range(44100*15))/44100)
 print(sig_mono.shape)
 
 temp = dream_lstm.TimeDomainLSTM(sig_mono[0:44100*15], 1024, 0.1, 0.05)
+
 print('training!')
-temp.train_model(20)
+# MEMORY SAVING TECHNIQUE
+for i in range(5) :
+    # 15 second segments
+    num_segments - np.floor(len(sig_mono) / 44100 / 15)
+    seg_starts = shuffle(range(num_segments))
+    for j in range(num_segments) :
+        temp.update_training(sig_mono[seg_starts[j]*44100*15:(seg_starts[j]+1)*44100*15])
+        temp.train_model(5)
+
 print('dreaming!')
 #samples = temp.dream(temp.x[0,:], 44100*10)
 samples = temp.dream(temp.x[0,:], 44100*10)
