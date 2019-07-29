@@ -20,7 +20,9 @@ class TimeDomainLSTM :
             else :
                 self.y[i,0] = input_audio[0]
 
-        print('training size = ' + str(self.x.shape))
+    # TODO: see if this causes any bugs
+    def update_training(self, input_audio) :
+        self.create_training(input_audio, self.seed_size)
 
     def create_model(self, segment_length, input_dropout, recurrent_dropout) :
         self.model = Sequential()
