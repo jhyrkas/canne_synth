@@ -33,9 +33,6 @@ wf_read.close()
 # SIN WAVE TEST
 #sig_mono = np.sin(2*np.pi*440.0*np.array(range(44100*15))/44100)
 
-[sig, fs] = sf.read('minicomp.wav')
-sig_mono = np.mean(sig, axis=1)
-
 print(sig_mono.shape)
 
 temp = dream_lstm.TimeDomainLSTM(sig_mono[0:44100*15], 1024, 0.1, 0.05)
