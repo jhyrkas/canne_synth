@@ -51,8 +51,7 @@ for i in range(5) :
         temp.train_model(5)
 
 print('dreaming!')
-#samples = temp.dream(temp.x[0,:], 44100*10)
-samples = temp.dream(temp.x[0,:])
+samples = temp.dream(temp.x[0:44100,:], 44100*10)
 samples = samples / np.max(np.abs(samples))
 
 wf_write = wave.open('dream.wav', 'w')

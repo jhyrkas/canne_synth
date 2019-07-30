@@ -44,12 +44,15 @@ class TimeDomainLSTM :
         self.model.fit(data, self.y, epochs=num_epochs)
 
     def dream(self, seed, num_samples) :
-        seed = seed.reshape(1, 1, self.seed_size)
+        seed_dim1 = seed.shape[0]
+        seed_dim2 = seed.shape[1]
+        seed = seed.reshape(seed_dim1, 1, seed_dim2)
         samples = np.zeros(num_samples)
         for i in range(num_samples) :
             pred = self.model.predict(seed)
-            samples[i] = pred
-            seed[0,0,0:-1] = seed[0, 0, 1:]
-            seed[0, 0, -1] = pred
+            samples[i] = pred[-1,0]
+            tmp = seed.flatten()
+            tmp = np.array(tmp.tolist()[1:] + [pred[-1,0]])
+            seed = tmp.reshape(seed_dim1, 1, seed_dim2)
 
         return samples
