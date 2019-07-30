@@ -42,11 +42,13 @@ temp = dream_lstm.TimeDomainLSTM(sig_mono[0:44100*15], 1024, 0.1, 0.05)
 
 print('training!')
 # MEMORY SAVING TECHNIQUE
-for i in range(5) :
+for i in range(4) :
     # 15 second segments
+    print ('pass ' + str(i+1))
     num_segments - np.floor(len(sig_mono) / 44100 / 15)
     seg_starts = shuffle(range(num_segments))
     for j in range(num_segments) :
+        print('part ' + str(j+1) + ', partition ' + str(seg_starts[j]))
         temp.update_training(sig_mono[seg_starts[j]*44100*15:(seg_starts[j]+1)*44100*15])
         temp.train_model(5)
 
