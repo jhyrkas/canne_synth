@@ -4,6 +4,7 @@ import dream_lstm
 import wave
 from struct import pack, unpack
 from random import shuffle
+import math
 
 # STEREO TEST
 #wf_read = wave.open( 'minicomp.wav', 'rb')
@@ -42,7 +43,7 @@ print('training!')
 for i in range(4) :
     # 15 second segments
     print ('pass ' + str(i+1))
-    num_segments = np.floor(len(sig_mono) / 44100 / 15)
+    num_segments = math.floor(len(sig_mono) / 44100 / 15)
     seg_starts = list(range(num_segments))
     shuffle(seg_starts)
     for j in range(num_segments) :
