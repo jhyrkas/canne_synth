@@ -28,12 +28,13 @@ class TimeDomainLSTM :
         self.model = Sequential()
         # trying with two LSTMs
         self.model.add(
-            LSTM(segment_length, dropout = input_dropout, return_sequences = True, \
+            LSTM(segment_length, dropout = input_dropout, \
+                 #return_sequences = True, \
                  recurrent_dropout = recurrent_dropout, input_shape=(None,self.x.shape[1]))
             )
-        self.model.add(
-            LSTM(segment_length, dropout = input_dropout, recurrent_dropout = recurrent_dropout)
-            )
+        #self.model.add(
+        #    LSTM(segment_length, dropout = input_dropout, recurrent_dropout = recurrent_dropout)
+        #    )
         self.model.add(Dense(1)) # output shape of 1
         # dream uses squared error, but not sure when range is [-1 1]
         #self.model.compile(optimizer='adam', loss='mean_absolute_error')
