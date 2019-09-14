@@ -4,6 +4,7 @@ import os
 import numpy as np
 import soundfile as sf
 import librosa
+from librosa.effects import pitch_shift
 
 class ComposeUtility :
 
@@ -104,6 +105,6 @@ class ComposeUtility :
     def lstm_feedback(self, audio, length) :
         pass
 
-    # TODO: pitch shifting algorithm here
+    # shift is given in fractional half steps, per the librosa algorithm
     def change_pitch(self, audio, shift) :
-        pass
+        return pitch_shift(audio, self.fs, shift)
