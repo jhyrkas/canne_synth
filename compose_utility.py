@@ -108,3 +108,13 @@ class ComposeUtility :
     # shift is given in fractional half steps, per the librosa algorithm
     def change_pitch(self, audio, shift) :
         return pitch_shift(audio, self.fs, shift)
+
+    # TODO: add envelope for notes. need to determine whether time is in seconds, frames, or fraction?
+    # TODO: if done as fraction, we need the original signal length. maybe also interpolation model? or decay model?
+    # TODO: common envelope utility functions?
+    def generate_envelope(self, a_time, a_level, d_time, d_level, s_time, s_level, r_time, r_level) :
+        pass
+
+    def exp_decay_env(self, audio) :
+        env = np.power(.9995, np.linspace(0, 2500, len(audio)))
+        return audio * env
