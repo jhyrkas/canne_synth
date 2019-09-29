@@ -109,11 +109,24 @@ class ComposeUtility :
     def change_pitch(self, audio, shift) :
         return pitch_shift(audio, self.fs, shift)
 
-    # TODO: add envelope for notes. need to determine whether time is in seconds, frames, or fraction?
-    # TODO: if done as fraction, we need the original signal length. maybe also interpolation model? or decay model?
-    # TODO: common envelope utility functions?
-    def generate_envelope(self, a_time, a_level, d_time, d_level, s_time, s_level, r_time, r_level) :
-        pass
+    # levels are between [0, 1] and time is in samples
+    def adsr_env(self, audio, a_time, a_level, d_time, d_level, s_time, s_level, r_time) :
+        env = np.zeros(a_time + d_time + s_time + r_time)
+        t = 0
+        env[t:t+a_time] = np.linspace(0, a_level, a_time)
+        t += a_time
+        env[t:t+d_time] = np.linspace(a_level, d_level, d_time)
+        t += d_time
+        env[t:t+s_time] = np.linspace(d_level, s_level, s_time)
+        t += s_time
+        env[t:t+r_time] = np.linspace(s_level, 0, r_time)
+        if len(env) < len(audio) :
+            env = np.append(env, np.zeros(len(audio) - len(env)))
+
+        return audio * env[:len(audio)]
+
+    def adsr_env_tuple(self, audio, params) :
+        return self.adsr_env(audio, params[0], params[1], params[2], params[3], params[4], params[5], params[6])
 
     def exp_decay_env(self, audio) :
         env = np.power(.9995, np.linspace(0, 2500, len(audio)))
