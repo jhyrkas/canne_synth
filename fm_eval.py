@@ -9,9 +9,10 @@ sig = cu.make_note_osc(act, 5)
 sig2 = cu.predict_audio(sig, None)
 cu.predict_and_get_middle_weights(sig)
 
-act[0] += 0.5
-sig = cu.make_note_osc(act, 5)
-cu.predict_and_get_middle_weights(sig)
+for i in range(10) :
+    act[0] += 0.1
+    sig = cu.make_note_osc(act, 5)
+    cu.predict_and_get_middle_weights(sig)
 
 # correcting for zeros
 #weights = np.zeros(8)
