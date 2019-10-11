@@ -50,7 +50,6 @@ class ComposeUtility :
             # would be unnecessary. however, this is probably preferable for debugging
             # so no one has to worry about finding weird pass-by-reference bugs
             feedback_frame = np.copy(self.prev_frame)
-        # could be argued that params should stay to their last value...
         if params is None :
             params = np.zeros(8)
         if params.shape == (8,) or params.shape == (1, 8) :
@@ -81,7 +80,23 @@ class ComposeUtility :
         sig = do_rtpghi_gaussian_window(mag_buf, self.len_window, self.hop_length)
         return sig
        
-        
+    def predict_and_get_middle_weights(self, audio, weights = None) :
+        input_frames = self.get_input_frames(audio)
+        num_frames = input_frames.shape[1]
+        mag_buf = np.zeros(input_frames.shape)
+
+        if weights is not None :
+            self.synth.reassign_middle_weights(weights)
+
+        for i in range(num_frames) :
+            if i == 0: # maybe check some more later?
+                in_frame = input_frames[:,i].reshape(1, input_frames.shape[0])
+                sig = self.synth.predict_and_get_middle_weights(in_frame)
+                print(sig)
+
+        if weights is not None :
+            self.synth.reassign_middle_weights(np.zeros(8))
+            
 
     # mag frames for input audio, used for prediction
     def get_input_frames(self, audio) :

@@ -164,6 +164,8 @@ class ANNeSynth:
                 self.outputLayer2 = self.recurseThroughLayer(initialLayer2,9,15)
                 self.initfilter = tf.multiply(self.recurseThroughLayer(initialLayer,1,7),self.modulators)
                 self.outputLayer4 = self.recurseThroughLayer(self.initfilter,8,15)
+                # used to check the middle layer values when doing a full prediction
+                self.paramLayer = self.recurseThroughLayer(initialLayer, 1, 7) 
 
         def trainNeuralNetwork(self):
                 self.saver = tf.train.Saver()
@@ -298,6 +300,7 @@ class ANNeSynth:
         def reassign_biases(self) :
                 # this technically causes a memory leak, so don't call very often...could fix later
                 for i in range(1, 16):
+                    # not 100% clear why, but even in the original model, this bias variable is kept non-zero
                     if i == 8 :
                         continue
                     self._sess.run(tf.assign(self.topology.b[i], tf.multiply(self.topology.b[i], 0)))
@@ -345,3 +348,7 @@ class ANNeSynth:
 
             # gain here for some reason?
             return 50*outFreqs
+
+        # fm-style evaluation only
+        def predict_and_get_middle_weights(self, input_vals) :
+            return self._sess.run(self.paramLayer,feed_dict={self.x_:input_vals})
