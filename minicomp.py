@@ -54,7 +54,7 @@ outsig[:tmp, 1] *= np.linspace(0, 1, tmp)
 
 # SECTION 2: FADE IN PREDICTED AUDIO ON RIGHT SIDE
 
-simple_pred = cu.predict_audio(melody, None)
+simple_pred = cu.predict_audio(melody, None)[0]
 fade_in = np.linspace(0, 1.5, len(simple_pred))
 outsig[1*len(simple_pred):2*len(simple_pred), 0] += 0.33 * simple_pred * fade_in
 outsig[1*len(simple_pred):2*len(simple_pred), 1] += 0.66 * simple_pred * fade_in
@@ -73,13 +73,13 @@ outsig[2*len(melody):2*len(melody) + len(melody_walk), 1] += 0.33 * melody_walk
 params3 = np.zeros((8, num_frames*4))
 for i in range(8) :
     params3[i,:] = drunk_walk(num_frames*4, -10, 10, .1, note1[i])
-pred_walk = cu.predict_audio(melody, params3.transpose())
+pred_walk = cu.predict_audio(melody, params3.transpose())[0]
 outsig[3*len(melody):4*len(melody), 0] += 0.33 * pred_walk
 outsig[3*len(melody):4*len(melody), 1] += 0.66 * pred_walk
 
 # SECTION 5
-feedback_predl = cu.predict_audio(outsig[3*len(melody):4*len(melody), 0], feedback_rate = 0.5)
-feedback_predr = cu.predict_audio(outsig[3*len(melody):4*len(melody), 1], feedback_rate = 0.5)
+feedback_predl = cu.predict_audio(outsig[3*len(melody):4*len(melody), 0], feedback_rate = 0.5)[0]
+feedback_predr = cu.predict_audio(outsig[3*len(melody):4*len(melody), 1], feedback_rate = 0.5)[0]
 outsig[4*len(melody):5*len(melody), 0] += 0.75 * feedback_predl
 outsig[4*len(melody):5*len(melody), 1] += 0.75 * feedback_predr
 
@@ -90,7 +90,7 @@ for i in range(8) :
 melody_walk = cu.make_note_osc(params4.transpose(), 16)
 for i in range(8) :
     params4[i,:] = drunk_walk(num_frames*4, -10, 10, .1, note1[i])
-pred_walk = cu.predict_audio(melody_walk, params4.transpose(), feedback_rate = 0.25)
+pred_walk = cu.predict_audio(melody_walk, params4.transpose(), feedback_rate = 0.25)[0]
 fade_in = np.linspace(1, 2.5, len(melody_walk))
 outsig[5*len(melody):6*len(melody), 0] += fade_in * melody_walk
 outsig[5*len(melody):6*len(melody), 1] += fade_in * pred_walk
@@ -102,7 +102,7 @@ for i in range(8) :
 melody_walk = cu.make_note_osc(params5.transpose(), 32)
 for i in range(8) :
     params5[i,:] = drunk_walk(num_frames*8, -10, 10, .1, note1[i])
-pred_walk = cu.predict_audio(melody_walk, params5.transpose(), feedback_rate = 0.25)
+pred_walk = cu.predict_audio(melody_walk, params5.transpose(), feedback_rate = 0.25)[0]
 
 outsig[6*len(melody):6*len(melody)+len(melody_walk), 0] += melody_walk
 outsig[6*len(melody):6*len(melody)+len(melody_walk), 1] += pred_walk
@@ -112,11 +112,11 @@ melody_walk = cu.make_note_osc(params5.transpose(), 32)
 outsig[6*len(melody):6*len(melody)+len(melody_walk), 0] += 0.66 * melody_walk
 outsig[6*len(melody):6*len(melody)+len(melody_walk), 1] += 0.33 * melody_walk
 
-simple_pred = cu.predict_audio(melody, feedback_rate = 0.1)
+simple_pred = cu.predict_audio(melody, feedback_rate = 0.1)[0]
 outsig[6*len(melody):6*len(melody)+len(simple_pred), 0] += 0.33 * simple_pred
 outsig[6*len(melody):6*len(melody)+len(simple_pred), 1] += 0.66 * simple_pred
 
-final_pred = cu.predict_audio(melody, feedback_rate = 0.5)
+final_pred = cu.predict_audio(melody, feedback_rate = 0.5)[0]
 final_pred *= np.linspace(0.5, 2, len(final_pred))
 outsig[7*len(melody):7*len(melody)+len(final_pred), 0] += 0.33 * final_pred
 outsig[7*len(melody):7*len(melody)+len(final_pred), 1] += 0.66 * final_pred
@@ -128,7 +128,7 @@ intro_params = np.zeros((8, num_frames))
 for i in range(8) :
     intro_params[i,:] = drunk_walk(num_frames, 0, 4, .07, np.random.random()*4.0)
 intro_walk = cu.make_note_osc(intro_params.transpose(), 20)
-intro_pred = cu.predict_audio(intro_walk)
+intro_pred = cu.predict_audio(intro_walk)[0]
 intro_pred *= np.hstack((
     np.linspace(0, 0.75, 3*len(intro_walk)//4), np.linspace(0.75, 0, len(intro_pred)//4)))
 intro_sig[:len(intro_pred), 0] += intro_pred
@@ -139,7 +139,7 @@ outsig[:len(intro_walk)//4,1] += intro_pred[3*len(intro_walk)//4:]
 
 outro_sig = np.zeros((44100*5,2))
 fake_signal = cu.make_note_osc(note1, 5)
-outro_pred = cu.predict_audio(fake_signal, feedback_rate=0.9, use_prev_frame=True)
+outro_pred = cu.predict_audio(fake_signal, feedback_rate=0.9, use_prev_frame=True)[0]
 outro_sig[:len(outro_pred),0] = 0.33*outro_pred*np.linspace(2, 0, len(outro_pred))
 outro_sig[:len(outro_pred),1] = 0.66*outro_pred*np.linspace(2, 0, len(outro_pred))
 

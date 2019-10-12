@@ -16,6 +16,7 @@ class ComposeUtility :
         self.len_window = 4096
         self.hop_length = 1024
         self.fs = 44100
+        # kept for minicomp compatibility but should be deprecated
         self.prev_frame = np.zeros((1, self.out_size))
 
     # generate note from middle layer
@@ -41,16 +42,20 @@ class ComposeUtility :
 
     # generate note by full prediction, including feedback
     # prev_frame will be for successive calls to predict audio, perhaps...
-    def predict_audio(self, audio, params = None, feedback_rate = 0, use_prev_frame = False) :
+    # use_prev_frame will be deprecated
+    def predict_audio(self, audio, params = None, feedback_rate = 0, use_prev_frame = False, prev_frame = None) :
         input_frames = self.get_input_frames(audio)
         num_frames = input_frames.shape[1]
         mag_buf = np.zeros(input_frames.shape)
         feedback_frame = np.zeros((1, self.out_size))
         if use_prev_frame :
-            # NOTE: copy here is probably unnecessary and the assignment at the end of this function
-            # would be unnecessary. however, this is probably preferable for debugging
-            # so no one has to worry about finding weird pass-by-reference bugs
-            feedback_frame = np.copy(self.prev_frame)
+            if prev_frame is not None :
+                feedback_frame = prev_frame
+            else :
+                # NOTE: copy here is probably unnecessary and the assignment at the end of this function
+                # would be unnecessary. however, this is probably preferable for debugging
+                # so no one has to worry about finding weird pass-by-reference bugs
+                feedback_frame = np.copy(self.prev_frame)
         if params is None :
             params = np.zeros(8)
         if params.shape == (8,) or params.shape == (1, 8) :
@@ -77,9 +82,10 @@ class ComposeUtility :
                 feedback_frame /= np.max(np.max(feedback_frame))
         # end predictions
 
+        # self.prev_frame will be deprecated
         self.prev_frame = feedback_frame
         sig = do_rtpghi_gaussian_window(mag_buf, self.len_window, self.hop_length)
-        return sig
+        return sig, feedback_frame
        
     def predict_and_get_middle_weights(self, audio, weights = None) :
         input_frames = self.get_input_frames(audio)
