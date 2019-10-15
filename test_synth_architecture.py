@@ -16,6 +16,13 @@ assert (len(audio) == 1)
 sd.play(audio[0], 44100)
 time.sleep(6)
 
+a.update_envelope('exp')
+audio = a.generate_audio(5)
+assert (len(audio) == 1)
+sd.play(audio[0], 44100)
+time.sleep(6)
+
+a.update_envelope(None)
 p[2] = 1.5
 p[7] = 2.0
 a.update_params('root', p)

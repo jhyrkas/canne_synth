@@ -33,6 +33,14 @@ class OscillatorNetwork :
         self.prev_frame = frame
         return sig
 
+    def envelope_audio(self, audio) :
+        if self.env is None :
+            return audio
+        elif self.env == 'exp' :
+            return self.cu.exp_decay_env(audio)
+        else :
+            return self.cu.adsr_env(audio, self.env)
+
     def add_carrier(self, net_name) :
         self.outputNets.append(net_name)
 
@@ -46,12 +54,15 @@ class OscillatorNetwork :
         self.params = params
 
 class Architecture :
-    def __init__(self, root_name, root_params) :
+    def __init__(self, root_name, root_params, env = None) :
+        if not (env is None or env == 'exp' or isinstance(env, tuple)) :
+            raise ValueError('env must be None, "exp", or a tuple of ADSR pairs')
         self.name_to_net = {}
         self.root_name = root_name
         self.cu = compose_utility.ComposeUtility()
         root_net = OscillatorNetwork(root_name, 'mod', self.cu, root_params)
         self.name_to_net[root_name] = root_net
+        self.env = env
 
     def add_network(self, net_name, mod_name, net_params = None, feedback = 0.0) :
         if net_name in self.name_to_net :
@@ -65,9 +76,25 @@ class Architecture :
     def update_params(self, net_name, net_params) :
         self.name_to_net[net_name].set_params(net_params)
 
-    def generate_audio(self, note_length) :
+    def update_envelope(self, env) :
+        if not (env is None or env == 'exp' or isinstance(env, tuple)) :
+            raise ValueError('env must be None, "exp", or a tuple of ADSR pairs')
+        self.env = env
+
+    def generate_audio(self, note_length, pitch_shift = 0) :
         name = self.root_name
-        return self.generate_audio_recurse(name, note_length)
+        audio_channels = self.generate_audio_recurse(name, note_length)
+        for i in range(len(audio_channels)) :
+            audio_channels[i] = self.envelope_audio(self.cu.change_pitch(audio_channels[i], pitch_shift))
+        return audio_channels
+
+    def envelope_audio(self, audio) :
+        if self.env is None :
+            return audio
+        elif self.env == 'exp' :
+            return self.cu.exp_decay_env(audio)
+        else :
+            return self.cu.adsr_env(audio, self.env)
 
     # param is either the note length or the audio input....pretty hacky
     def generate_audio_recurse(self, net_name, param) :
