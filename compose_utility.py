@@ -85,6 +85,8 @@ class ComposeUtility :
         # self.prev_frame will be deprecated
         self.prev_frame = feedback_frame
         sig = do_rtpghi_gaussian_window(mag_buf, self.len_window, self.hop_length)
+        # NOTE: comment out this line for original minicomp
+        sig = (sig / np.max(np.abs(sig))) * np.max(np.abs(audio)) # normalize volume
         return sig, feedback_frame
        
     def predict_and_get_middle_weights(self, audio, weights = None) :
@@ -130,24 +132,36 @@ class ComposeUtility :
     def change_pitch(self, audio, shift) :
         return pitch_shift(audio, self.fs, shift)
 
-    # levels are between [0, 1] and time is in samples
-    def adsr_env(self, audio, a_time, a_level, d_time, d_level, s_time, s_level, r_time) :
-        env = np.zeros(a_time + d_time + s_time + r_time)
-        t = 0
-        env[t:t+a_time] = np.linspace(0, a_level, a_time)
-        t += a_time
-        env[t:t+d_time] = np.linspace(a_level, d_level, d_time)
-        t += d_time
-        env[t:t+s_time] = np.linspace(d_level, s_level, s_time)
-        t += s_time
-        env[t:t+r_time] = np.linspace(s_level, 0, r_time)
-        if len(env) < len(audio) :
-            env = np.append(env, np.zeros(len(audio) - len(env)))
+    # levels are between [0, 1] and time is in seconds
+    # envelope takes a_time to get from 0 to a_level, r_time to get to s_level, and r_time to get to 0
+    def adsr_env(self, audio, a_time, a_level, d_time, s_level, r_time) :
+        a_samples = int(44100.0 * a_time)
+        d_samples = int(44100.0 * d_time)
+        r_samples = int(44100.0 * r_time)
+        # throw error if the note is shorter than the release time
+        assert(len(audio) > r_samples)
+        env = np.linspace(0, a_level, a_samples)
+        env = np.append(env, np.linspace(a_level, s_level, d_samples))
+        # usual case
+        if len(audio) >= a_samples + d_samples + r_samples :
+            release = np.linspace(s_level, 0, r_samples)
+            sus = np.zeros(len(audio) - (len(env) + len(release))) + s_level
+            env = np.append(env, sus)
+            env = np.append(env, release)
+        # shorter note than env specified
+        else :
+            offset = len(audio) - r_samples
+            level = env[offset]
+            release = np.linspace(level, 0, r_samples)
+            tmp = np.copy(env)
+            env = np.zeros(len(audio))
+            env[0:offset] = tmp[0:offset]
+            env[offset:] = release
 
-        return audio * env[:len(audio)]
+        return audio * env
 
     def adsr_env_tuple(self, audio, params) :
-        return self.adsr_env(audio, params[0], params[1], params[2], params[3], params[4], params[5], params[6])
+        return self.adsr_env(audio, params[0], params[1], params[2], params[3], params[4])
 
     def exp_decay_env(self, audio) :
         env = np.power(.9995, np.linspace(0, 2500, len(audio)))
