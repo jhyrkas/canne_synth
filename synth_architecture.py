@@ -88,14 +88,6 @@ class Architecture :
             audio_channels[i] = self.envelope_audio(self.cu.change_pitch(audio_channels[i], pitch_shift))
         return audio_channels
 
-    def envelope_audio(self, audio) :
-        if self.env is None :
-            return audio
-        elif self.env == 'exp' :
-            return self.cu.exp_decay_env(audio)
-        else :
-            return self.cu.adsr_env(audio, self.env)
-
     # param is either the note length or the audio input....pretty hacky
     def generate_audio_recurse(self, net_name, param) :
         net = self.name_to_net[net_name]
@@ -113,3 +105,15 @@ class Architecture :
         for n in net.get_carriers() :
             returned_audio += self.generate_audio_recurse(n, audio)
         return returned_audio
+
+    def envelope_audio(self, audio) :
+        if self.env is None :
+            return audio
+        elif self.env == 'exp' :
+            return self.cu.exp_decay_env(audio)
+        else :
+            return self.cu.adsr_env(audio, self.env)
+
+    # utility function for parameter generation
+    def get_num_frames(self, seconds) :
+        return self.cu.get_num_frames(seconds)
