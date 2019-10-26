@@ -85,10 +85,27 @@ class ComposeUtility :
         # self.prev_frame will be deprecated
         self.prev_frame = feedback_frame
         sig = do_rtpghi_gaussian_window(mag_buf, self.len_window, self.hop_length)
-        # NOTE: comment out this line for original minicomp
-        sig = (sig / np.max(np.abs(sig))) * np.max(np.abs(audio)) # normalize volume
         return sig, feedback_frame
-       
+
+    # predictive feedback, no params so far
+    def predictive_feedback(self, audio) :
+        input_frames = self.get_input_frames(audio)
+        num_frames = input_frames.shape[1]
+        mag_buf = np.zeros(input_frames.shape)
+        in_frame = input_frames[:,0].reshape(1, input_frames.shape[0])
+        in_audio = audio[:self.len_window]
+        for i in range(num_frames) :
+            in_frame = self.get_input_frames(in_audio)[:,0].reshape(1, input_frames.shape[0])
+            mag_buf[:,i] = self.synth.generate_audio(
+                in_frame, bass_boost = True, full_mode = True)
+            tmp_mag = np.hstack((in_frame.transpose(), mag_buf[:,i].reshape(input_frames.shape[0], 1)))
+            pred_audio = do_rtpghi_gaussian_window(tmp_mag, self.len_window, self.hop_length)
+            pred_audio = (pred_audio / np.max(np.abs(pred_audio)))
+            in_audio = np.append(in_audio[5:], pred_audio[-5:])
+
+        sig = do_rtpghi_gaussian_window(mag_buf, self.len_window, self.hop_length)
+        return sig
+
     def predict_and_get_middle_weights(self, audio, weights = None) :
         input_frames = self.get_input_frames(audio)
         num_frames = input_frames.shape[1]
@@ -123,6 +140,12 @@ class ComposeUtility :
         target_length = float(length * self.fs)
         num_frames = int(np.ceil((target_length - self.out_size) / self.hop_length))
         return num_frames
+
+    # TODO: make this the regular method and deprecate old method, which only needs to be there for minicomp.py functionality
+    def get_num_frames_new(self, length) :
+        # generate a nonsense signal, just need to get 
+        spec = librosa.core.stft(np.sin(2*np.pi*np.linspace(0, length, self.fs*length)), n_fft = self.len_window, hop_length = self.hop_length)
+        return spec.shape[1]
 
     # TODO: add dreaming effect
     def lstm_feedback(self, audio, length) :
