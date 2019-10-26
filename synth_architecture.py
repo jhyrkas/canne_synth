@@ -53,6 +53,9 @@ class OscillatorNetwork :
     def set_params(self, params) :
         self.params = params
 
+    def set_feedback(self, feedback) :
+        self.fr = feedback
+
 class Architecture :
     def __init__(self, root_name, root_params, env = None) :
         if not (env is None or env == 'exp' or isinstance(env, tuple)) :
@@ -80,6 +83,9 @@ class Architecture :
         if not (env is None or env == 'exp' or isinstance(env, tuple)) :
             raise ValueError('env must be None, "exp", or a tuple of ADSR pairs')
         self.env = env
+
+    def update_feedback(self, net_name, feedback) :
+        self.name_to_net[net_name].set_feedback(feedback)
 
     def generate_audio(self, note_length, pitch_shift = 0) :
         name = self.root_name
