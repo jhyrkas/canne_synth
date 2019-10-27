@@ -64,7 +64,8 @@ def get_params_from_word(orig_word) :
 
     # pitch param
     most_common_letter = counts.most_common()[0][0]
-    params['pitch'] = pitch_dict[most_common_letter] if not most_common_letter == 'z' else (random.random() * 24) - 12
+    #params['pitch'] = pitch_dict[most_common_letter] if not most_common_letter == 'z' else (random.random() * 24) - 12
+    params['pitch'] = pitch_dict[most_common_letter] if not most_common_letter == 'z' else (random.random() * 12) - 6
 
     # feedback
     params['feedback'] = sum([1 if counts[letter_freq[i+16]] > 0 else 0 for i in range(10)]) / 10
@@ -138,8 +139,8 @@ if __name__ == '__main__' :
     devices = sd.query_devices()
     device = 0
     for i in range(len(devices)) :
-        if devices[i]['name'] == 'Soundflower (2ch)' :
-        #if devices[i]['name'] == 'Built-in Output' :
+        #if devices[i]['name'] == 'Soundflower (2ch)' :
+        if devices[i]['name'] == 'Built-in Output' :
             device = i
 
     t1 = threading.Thread(target=handle_params, args=(queues[0],device,0))
