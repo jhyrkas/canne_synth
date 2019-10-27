@@ -88,7 +88,8 @@ def get_params_from_word(orig_word) :
         assert(a_time >= 0.0 and a_time <= 1.0)
         assert(r_time >= 0.0 and r_time <= 1.0)
         assert(d_time >= 0.0 and d_time <= 1.0)
-        params['envelope'] = (a_time, a_level, d_time, s_level, r_time)
+        #params['envelope'] = (a_time, a_level, d_time, s_level, r_time)
+        params['envelope'] = (a_time*length, a_level, d_time*length, s_level, r_time*length)
 
     return params
 
