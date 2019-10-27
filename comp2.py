@@ -6,9 +6,11 @@ import random
 from collections import Counter
 import threading
 import numpy as np
+import scipy
 import synth_architecture as sa
 from scipy.signal import sawtooth
 import sounddevice as sd
+import soundfile as sf
 import librosa
 import time
 
@@ -100,6 +102,8 @@ def get_num_frames_static(length) :
 def handle_params(q, device, mode) :
     arch = sa.Architecture('root', np.zeros(8) + 1.0)
     arch.add_network('car', 'root')
+    reverb_sig, fs = sf.read('ir.wav')
+    reverb_sig = np.mean(reverb_sig, axis = 1)
     s = sd.OutputStream(samplerate=44100, device=device, channels=2)
     s.start()
     while True :
@@ -114,7 +118,8 @@ def handle_params(q, device, mode) :
             arch.update_params('car', params['car'])
             arch.update_envelope(params['envelope'])
             arch.update_feedback('car', params['feedback'])
-            mono = arch.generate_audio(params['length'], params['pitch'])[0]
+            mono = scipy.signal.fftconvolve(arch.generate_audio(params['length'], params['pitch'])[0], reverb_sig)
+            #mono = arch.generate_audio(params['length'], params['pitch'])[0]
             audio = np.zeros((mono.shape[0], 2))
             if mode == 0 :
                 audio[:,0] = 0.5 * mono
