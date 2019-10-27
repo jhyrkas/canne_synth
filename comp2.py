@@ -1,12 +1,16 @@
 # currently unnamed compositional system
 # jeremy hyrkas, 2019
 
+import queue
 import random
 from collections import Counter
+import threading
 import numpy as np
 import synth_architecture as sa
 from scipy.signal import sawtooth
 import sounddevice as sd
+import librosa
+import time
 
 # english letter frequency according to http://letterfrequency.org/
 alphabet = 'abcdefghijklmnopqrstuvwxyz'
@@ -18,7 +22,7 @@ pitch_dict = {}
 for i in range(25) :
     pitch_dict[alphabet[i]] = i - 12
 
-def get_params_from_word(orig_word, arch) :
+def get_params_from_word(orig_word) :
     word = orig_word.lower()
     counts = Counter(word)
     global letter_freq
@@ -31,7 +35,7 @@ def get_params_from_word(orig_word, arch) :
 
     # modulation and carrier params
 
-    num_frames = arch.get_num_frames(length)
+    num_frames = get_num_frames_static(length)
     mod_params = np.zeros((num_frames, 8))
     word_index = 0
 
@@ -87,19 +91,83 @@ def get_params_from_word(orig_word, arch) :
 
     return params
 
-if __name__ == '__main__' :
+def get_num_frames_static(length) :
+    spec = librosa.core.stft(np.sin(2*np.pi*np.linspace(0, length, 44100*length)), n_fft = 4096, hop_length = 1024)
+    return spec.shape[1]
+
+def handle_params(q, device, mode) :
     arch = sa.Architecture('root', np.zeros(8) + 1.0)
     arch.add_network('car', 'root')
-
+    s = sd.OutputStream(samplerate=44100, device=device, channels=2)
+    s.start()
     while True :
-        inp = input('type whatever: ')
-        inp = ''.join(c for c in inp if c.isalpha())
-        if len(inp) > 0 :
-            params = get_params_from_word(inp, arch)
-            print (params)
+        time.sleep(0.25)
+        if not q.empty() :
+            word = q.get()
+            # hacky
+            if word is None :
+                break
+            params = get_params_from_word(word)
             arch.update_params('root', params['mod'])
             arch.update_params('car', params['car'])
             arch.update_envelope(params['envelope'])
             arch.update_feedback('car', params['feedback'])
-            audio = arch.generate_audio(params['length'], params['pitch'])[0]
-            sd.play(audio, 44100)
+            mono = arch.generate_audio(params['length'], params['pitch'])[0]
+            audio = np.zeros((mono.shape[0], 2))
+            if mode == 0 :
+                audio[:,0] = 0.5 * mono
+                audio[:,1] = 0.5 * mono
+            elif mode == 1 :
+                audio[:,0] = 0.66 * mono
+                audio[:,1] = 0.33 * mono
+            elif mode == 2:
+                audio[:,0] = 0.33 * mono
+                audio[:,1] = 0.66 * mono
+            elif mode == 3:
+                audio[:,0] = mono
+            else :
+                audio[:,1] = mono
+            s.write(np.float32(audio))
+
+if __name__ == '__main__' :
+    queues = [queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue()]
+    q_index = 0
+
+    #queue = queue.Queue()
+
+    devices = sd.query_devices()
+    device = 0
+    for i in range(len(devices)) :
+        if devices[i]['name'] == 'Soundflower (2ch)' :
+        #if devices[i]['name'] == 'Built-in Output' :
+            device = i
+
+    t1 = threading.Thread(target=handle_params, args=(queues[0],device,0))
+    t2 = threading.Thread(target=handle_params, args=(queues[1],device,1))
+    t3 = threading.Thread(target=handle_params, args=(queues[2],device,2))
+    t4 = threading.Thread(target=handle_params, args=(queues[3],device,3))
+    t5 = threading.Thread(target=handle_params, args=(queues[4],device,4))
+    t1.start()
+    t2.start()
+    t3.start()
+    t4.start()
+    t5.start()
+
+    inp = input('type whatever: ')
+    while not inp == 'theend' :
+        inps = inp.split()
+        for i in inps :
+            word = ''.join(c for c in i if c.isalpha())
+            if len(inp) > 0 :
+                #queue.put(params)
+                queues[q_index].put(word)
+                q_index = (q_index + 1) % 5
+        inp = input('type whatever: ')
+    #queue.put(None)
+    for i in [0,1,2,3,4] :
+        queues[i].put(None)
+    t1.join()
+    t2.join()
+    t3.join()
+    t4.join()
+    t5.join()
