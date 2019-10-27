@@ -1,3 +1,6 @@
+# to alex, with regret
+# jeremy hyrkas 2019
+
 import sounddevice as sd
 import soundfile as sf
 import compose_utility

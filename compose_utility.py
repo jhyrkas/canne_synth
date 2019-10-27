@@ -101,7 +101,8 @@ class ComposeUtility :
             tmp_mag = np.hstack((in_frame.transpose(), mag_buf[:,i].reshape(input_frames.shape[0], 1)))
             pred_audio = do_rtpghi_gaussian_window(tmp_mag, self.len_window, self.hop_length)
             pred_audio = (pred_audio / np.max(np.abs(pred_audio)))
-            in_audio = np.append(in_audio[5:], pred_audio[-5:])
+            #in_audio = np.append(in_audio[5:], pred_audio[-5:])
+            in_audio = np.append(in_audio[5:], pred_audio[len(pred_audio)//2:len(pred_audio)//2+5])
 
         sig = do_rtpghi_gaussian_window(mag_buf, self.len_window, self.hop_length)
         return sig

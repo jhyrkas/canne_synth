@@ -33,14 +33,6 @@ class OscillatorNetwork :
         self.prev_frame = frame
         return sig
 
-    def envelope_audio(self, audio) :
-        if self.env is None :
-            return audio
-        elif self.env == 'exp' :
-            return self.cu.exp_decay_env(audio)
-        else :
-            return self.cu.adsr_env(audio, self.env)
-
     def add_carrier(self, net_name) :
         self.outputNets.append(net_name)
 
@@ -118,8 +110,8 @@ class Architecture :
         elif self.env == 'exp' :
             return self.cu.exp_decay_env(audio)
         else :
-            return self.cu.adsr_env(audio, self.env)
+            return self.cu.adsr_env_tuple(audio, self.env)
 
     # utility function for parameter generation
     def get_num_frames(self, seconds) :
-        return self.cu.get_num_frames(seconds)
+        return self.cu.get_num_frames_new(seconds)

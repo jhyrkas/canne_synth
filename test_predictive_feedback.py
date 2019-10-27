@@ -1,6 +1,7 @@
 import compose_utility
 import numpy as np
 import sounddevice as sd
+import soundfile as sf
 
 cu = compose_utility.ComposeUtility()
 params = np.zeros(8) + 1.0
@@ -36,3 +37,5 @@ audio6 = cu.predict_audio(audio4, feedback_rate = 0.5)[0]
 sd.wait()
 sd.play(audio6, 44100)
 sd.wait()
+
+sf.write('weird_example.wav', audio4, 44100)
