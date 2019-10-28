@@ -118,7 +118,9 @@ def handle_params(q, device, mode) :
             arch.update_params('car', params['car'])
             arch.update_envelope(params['envelope'])
             arch.update_feedback('car', params['feedback'])
-            mono = scipy.signal.fftconvolve(arch.generate_audio(params['length'], params['pitch'])[0], reverb_sig)
+            mono = arch.generate_audio(params['length'], params['pitch'])[0]
+            reverb = scipy.signal.fftconvolve(mono, reverb_sig)
+            mono = (reverb / np.max(np.abs(reverb))) * np.max(np.abs(mono)) # normalize to original volume
             #mono = arch.generate_audio(params['length'], params['pitch'])[0]
             audio = np.zeros((mono.shape[0], 2))
             if mode == 0 :
@@ -145,8 +147,8 @@ if __name__ == '__main__' :
     devices = sd.query_devices()
     device = 0
     for i in range(len(devices)) :
-        #if devices[i]['name'] == 'Soundflower (2ch)' :
-        if devices[i]['name'] == 'Built-in Output' :
+        if devices[i]['name'] == 'Soundflower (2ch)' :
+        #if devices[i]['name'] == 'Built-in Output' :
             device = i
 
     t1 = threading.Thread(target=handle_params, args=(queues[0],device,0))
@@ -165,7 +167,7 @@ if __name__ == '__main__' :
         inps = inp.split()
         for i in inps :
             word = ''.join(c for c in i if c.isalpha())
-            if len(inp) > 0 :
+            if len(word) > 0 :
                 #queue.put(params)
                 queues[q_index].put(word)
                 q_index = (q_index + 1) % 5
