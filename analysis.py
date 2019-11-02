@@ -11,9 +11,16 @@ path1 = 'analysis_files/orig_param_sweep/'
 path2 = 'analysis_files/predict_and_sweep/'
 path3 = 'analysis_files/feedback/'
 
-# generate parameter sweeps
 n_secs = 10.0
 n_frames = synth.get_num_frames(n_secs)
+
+# original file for feedback
+params = np.zeros((n_frames, 8)) + 1.0
+synth.update_params('root', params)
+audio = synth.generate_audio(n_secs)[0]
+sf.write(path3+'root_audio.wav', audio, fs)
+
+# generate parameter sweeps
 
 for i in range (8) :
     params = np.zeros((n_frames, 8))
@@ -80,6 +87,13 @@ for fa in feedback_amounts :
     # clearing the cached last frame
     synth.update_feedback('pred', 0.0)
     audio = synth.generate_audio(1)[0]
+
+# predictive feedback
+synth.add_network('pred2', 'root', predictive_feedback_mode = True)
+audio = synth.generate_audio(n_secs)[1]
+sf.write(path3+'predictive_feedback.wav', audio, fs)
+audio = synth.generate_audio(n_secs*3)[1]
+sf.write(path3+'predictive_feedback_30sec.wav', audio, fs)
 
 # analysis
 
@@ -153,3 +167,31 @@ for fa in feedback_amounts :
     plt.tight_layout()
     plt.savefig(path3+'feedback_rate_' + str(fa) + '_stft.pdf')
     plt.clf()
+
+y, sr = librosa.load(path3+'root_audio.wav', sr=None)
+S = librosa.stft(y)
+db = librosa.amplitude_to_db(np.abs(S), ref=np.max)
+librosa.display.specshow(db, x_axis='time', y_axis='log', sr=sr)
+plt.title('Root network')
+plt.colorbar(format='%+2.0f dB')
+plt.tight_layout()
+plt.savefig(path3+'root_audio_stft.pdf')
+plt.clf()
+y, sr = librosa.load(path3+'predictive_feedback.wav', sr=None)
+S = librosa.stft(y)
+db = librosa.amplitude_to_db(np.abs(S), ref=np.max)
+librosa.display.specshow(db, x_axis='time', y_axis='log', sr=sr)
+plt.title('Predictive feedback')
+plt.colorbar(format='%+2.0f dB')
+plt.tight_layout()
+plt.savefig(path3+'predictive_feedback_stft.pdf')
+plt.clf()
+y, sr = librosa.load(path3+'predictive_feedback_30sec.wav', sr=None)
+S = librosa.stft(y)
+db = librosa.amplitude_to_db(np.abs(S), ref=np.max)
+librosa.display.specshow(db, x_axis='time', y_axis='log', sr=sr)
+plt.title('Predictive feedback')
+plt.colorbar(format='%+2.0f dB')
+plt.tight_layout()
+plt.savefig(path3+'predictive_feedback_30sec_stft.pdf')
+plt.clf()

@@ -10,10 +10,15 @@ class ModeError(Exception):
 
 class OscillatorNetwork :
     def __init__(self, name, mode, comp_utility, params, feedback = 0.0) :
-        if not (mode == 'mod' or mode == 'carr') :
+        if not (mode == 'mod' or mode == 'carr' or mode == 'pred') :
             raise ValueError('invalid mode')
         self.name = name
-        self.mode = 0 if mode == 'mod' else 1
+        if mode == 'mod' :
+            self.mode = 0
+        elif mode == 'carr' :
+            self.mode = 1
+        else :
+            self.mode = 2
         self.cu = comp_utility
         self.prev_frame = np.zeros((1, self.cu.out_size))
         if self.mode == 1 :
@@ -22,16 +27,19 @@ class OscillatorNetwork :
         self.params = params
 
     def generate_audio_mod(self, length) :
-        if self.mode == 1 :
+        if self.mode == 1 or self.mode == 2 :
             raise ModeError(self.mode)
         return self.cu.make_note_osc(self.params, length)
 
     def generate_audio_car(self, audio) :
         if self.mode == 0 :
             raise ModeError(self.mode)
-        sig,frame = self.cu.predict_audio(audio, self.params, self.fr, prev_frame = self.prev_frame)
-        self.prev_frame = frame
-        return sig
+        if self.mode == 1 :
+            sig,frame = self.cu.predict_audio(audio, self.params, self.fr, prev_frame = self.prev_frame)
+            self.prev_frame = frame
+            return sig
+        else :
+            return self.cu.predictive_feedback(audio)
 
     def add_carrier(self, net_name) :
         self.outputNets.append(net_name)
@@ -59,12 +67,16 @@ class Architecture :
         self.name_to_net[root_name] = root_net
         self.env = env
 
-    def add_network(self, net_name, mod_name, net_params = None, feedback = 0.0) :
+    def add_network(self, net_name, mod_name, net_params = None, feedback = 0.0, predictive_feedback_mode = False) :
         if net_name in self.name_to_net :
             raise ValueError('network names must be unique')
         if mod_name not in self.name_to_net :
             raise ValueError('modulating network must already exist')
-        net = OscillatorNetwork(net_name, 'carr', self.cu, net_params, feedback)
+        net = None
+        if predictive_feedback_mode :
+            net = OscillatorNetwork(net_name, 'pred', self.cu, net_params, feedback)
+        else :
+            net = OscillatorNetwork(net_name, 'carr', self.cu, net_params, feedback)
         self.name_to_net[net_name] = net
         self.name_to_net[mod_name].add_carrier(net_name)
 
