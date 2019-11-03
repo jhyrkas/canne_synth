@@ -35,8 +35,11 @@ plt.clf()
 
 params = np.zeros((length, 8)) + 1.0
 params[:, 7] = np.linspace(0.0, 3.0, length)
+bias = np.zeros(8)
+bias[3] = 2.0
+bias[5] = 4.0
 
-middle_weights = np.array(cu.predict_and_get_middle_weights(cu.make_note_osc(params, 5.0)))
+middle_weights = np.array(cu.predict_and_get_middle_weights(cu.make_note_osc(params, 5.0), weights = bias))
 middle_weights = middle_weights.reshape(middle_weights.shape[0], middle_weights.shape[2])
 
 fig = plt.figure()
