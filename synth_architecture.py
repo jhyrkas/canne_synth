@@ -126,4 +126,4 @@ class Architecture :
 
     # utility function for parameter generation
     def get_num_frames(self, seconds) :
-        return self.cu.get_num_frames_new(seconds)
+        return self.cu.get_num_frames(seconds)

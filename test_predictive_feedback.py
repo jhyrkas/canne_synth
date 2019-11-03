@@ -22,7 +22,7 @@ sd.play(audio3, 44100)
 #sd.wait()
 #sd.play(audio4, 44100)
 
-n_frames = cu.get_num_frames_new(30.0)
+n_frames = cu.get_num_frames(30.0)
 params = np.zeros((n_frames, 8))
 params[:n_frames, 0] = np.linspace(0, 3.0, n_frames)
 params[:n_frames, 6] = np.logspace(3.0, 0, n_frames)
