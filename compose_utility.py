@@ -117,10 +117,9 @@ class ComposeUtility :
             self.synth.reassign_middle_weights(weights)
 
         for i in range(num_frames) :
-            if i == 0: # maybe check some more later?
-                in_frame = input_frames[:,i].reshape(1, input_frames.shape[0])
-                sig = self.synth.predict_and_get_middle_weights(in_frame)
-                middle_weights.append(sig)
+            in_frame = input_frames[:,i].reshape(1, input_frames.shape[0])
+            sig = self.synth.predict_and_get_middle_weights(in_frame)
+            middle_weights.append(sig)
 
         if weights is not None :
             self.synth.reassign_middle_weights(np.zeros(8))
