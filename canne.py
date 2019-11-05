@@ -12,6 +12,9 @@ import soundfile as sf
 from time import time
 from tqdm import tqdm
 
+# TODO : in the future, migrate from tensorflow v1
+tf.compat.v1.disable_eager_execution()
+
 def do_rtpghi_gaussian_window(mag,len_window,hop_length_):
         threshold = 1e-3
         pie = np.pi
@@ -72,7 +75,7 @@ class Topology:
                 self.W_fc[15] = self.getWeightVariable([self.fc[14], self.output_size],'W_fc14')
 
                 # weight update for full_execution predictions
-                self.update_placeholder = tf.placeholder(self.b[7].dtype, shape=self.b[7].get_shape())
+                self.update_placeholder = tf.compat.v1.placeholder(self.b[7].dtype, shape=self.b[7].get_shape())
                 self.update_operation = self.b[7].assign(self.update_placeholder)
 
         def getBiasVariable(self,shape_, name_):
@@ -82,8 +85,8 @@ class Topology:
 
         #Creates weight variables for the ANN and groups them in a collection for use in L2 regularization
         def getWeightVariable(self,shape_, name_): 
-                initial = tf.truncated_normal(shape_, name=name_, stddev=0.15) #Initialized with a truncated normal random variable
-                tf.add_to_collection('l2', tf.reduce_sum(tf.pow(initial,2))) #Adding to L2 collection, summing squares
+                initial = tf.random.truncated_normal(shape_, name=name_, stddev=0.15) #Initialized with a truncated normal random variable
+                tf.compat.v1.add_to_collection('l2', tf.reduce_sum(tf.pow(initial,2))) #Adding to L2 collection, summing squares
                 return tf.Variable(initial)
 
 class OperationMode:
@@ -101,15 +104,16 @@ class OperationMode:
 class ANNeSynth:
         def __init__(self,operationMode):
                 self._operationMode = operationMode
-                self._sess = tf.Session()
+                #self._sess = tf.Session()
+                self._sess = tf.compat.v1.Session()
 
                 #Load the stft so we have an input_size (from the topology)
                 self.loadDataSet()
 
                 ##Generating placeholders for the input and label data
-                self.x_ = tf.placeholder(tf.float32, shape=[None, self.topology.input_size])
-                self.y_ = tf.placeholder(tf.float32, shape=[None, self.topology.output_size])
-                self.controller = tf.placeholder(tf.float32, shape=[None, self.topology.min_HL])
+                self.x_ = tf.compat.v1.placeholder(tf.float32, shape=[None, self.topology.input_size])
+                self.y_ = tf.compat.v1.placeholder(tf.float32, shape=[None, self.topology.output_size])
+                self.controller = tf.compat.v1.placeholder(tf.float32, shape=[None, self.topology.min_HL])
                 ##
                 self.makeTensorFlowLayers()
 
@@ -159,7 +163,7 @@ class ANNeSynth:
                 ##Making the tensorflow layers from bias and weight variables
                 initialLayer = tf.nn.relu(tf.add(tf.matmul(self.x_, self.topology.W_fc[0]),self.topology.b[0]))
                 initialLayer2 = tf.nn.relu(tf.add(tf.matmul(self.controller, self.topology.W_fc[8]),self.topology.b[8]))
-                self.modulators = tf.placeholder(tf.float32, shape=[None, self.topology.fc[7]])
+                self.modulators = tf.compat.v1.placeholder(tf.float32, shape=[None, self.topology.fc[7]])
                 self.outputLayer = self.recurseThroughLayer(initialLayer,1,15)
                 self.outputLayer2 = self.recurseThroughLayer(initialLayer2,9,15)
                 self.initfilter = tf.multiply(self.recurseThroughLayer(initialLayer,1,7),self.modulators)
@@ -290,7 +294,7 @@ class ANNeSynth:
                                 return U
 
         def load_weights_into_memory(self):
-                self.saver = tf.train.Saver()
+                self.saver = tf.compat.v1.train.Saver()
                 ckpt = tf.train.latest_checkpoint(self.topology.chkpt_name)
                 self.saver.restore(self._sess, ckpt)
                 if self._operationMode.zero_out_biases :
@@ -303,7 +307,7 @@ class ANNeSynth:
                     # not 100% clear why, but even in the original model, this bias variable is kept non-zero
                     if i == 8 :
                         continue
-                    self._sess.run(tf.assign(self.topology.b[i], tf.multiply(self.topology.b[i], 0)))
+                    self._sess.run(tf.compat.v1.assign(self.topology.b[i], tf.multiply(self.topology.b[i], 0)))
 
         def reassign_middle_weights(self, weights):
                 self._sess.run(self.topology.update_operation, {self.topology.update_placeholder : weights})
