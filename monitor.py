@@ -7,7 +7,7 @@ for i in range(len(devices)) :
     if devices[i]['name'] == 'Soundflower (2ch)' :
         indevice = i
     if devices[i]['name'] == 'Built-in Output' :
-            outdevice = i
+        outdevice = i
 
 instream = sd.InputStream(samplerate = 44100, device = indevice)
 outstream = sd.OutputStream(samplerate = 44100, device = outdevice)
