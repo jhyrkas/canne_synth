@@ -111,19 +111,20 @@ class ComposeUtility :
         input_frames = self.get_input_frames(audio)
         num_frames = input_frames.shape[1]
         mag_buf = np.zeros(input_frames.shape)
+        middle_weights = []
 
         if weights is not None :
             self.synth.reassign_middle_weights(weights)
 
         for i in range(num_frames) :
-            if i == 0: # maybe check some more later?
-                in_frame = input_frames[:,i].reshape(1, input_frames.shape[0])
-                sig = self.synth.predict_and_get_middle_weights(in_frame)
-                print(sig)
+            in_frame = input_frames[:,i].reshape(1, input_frames.shape[0])
+            sig = self.synth.predict_and_get_middle_weights(in_frame)
+            middle_weights.append(sig)
 
         if weights is not None :
             self.synth.reassign_middle_weights(np.zeros(8))
             
+        return middle_weights
 
     # mag frames for input audio, used for prediction
     def get_input_frames(self, audio) :
@@ -135,15 +136,14 @@ class ComposeUtility :
         mag_max = np.max(mag_frames, axis=0)
         return mag_frames / mag_max
 
-    # utility function
-    # TODO can i get this more accurate? not quite there
-    def get_num_frames(self, length) :
+    # deprecated: there's a bug, only keeping for minicomp
+    def get_num_frames_dep(self, length) :
         target_length = float(length * self.fs)
         num_frames = int(np.ceil((target_length - self.out_size) / self.hop_length))
         return num_frames
 
-    # TODO: make this the regular method and deprecate old method, which only needs to be there for minicomp.py functionality
-    def get_num_frames_new(self, length) :
+    # utility function
+    def get_num_frames(self, length) :
         # generate a nonsense signal, just need to get 
         spec = librosa.core.stft(np.sin(2*np.pi*np.linspace(0, length, self.fs*length)), n_fft = self.len_window, hop_length = self.hop_length)
         return spec.shape[1]
