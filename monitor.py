@@ -8,7 +8,7 @@ for i in range(len(devices)) :
     if devices[i]['name'] == 'Soundflower (2ch)' :
         indevice = i
     if devices[i]['name'] == 'Built-in Output' :
-            outdevice = i
+        outdevice = i
 
 if indevice == -1 or outdevice == -1 :
     print("couldn't find the right devices")
