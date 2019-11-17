@@ -4,12 +4,22 @@ import soundfile as sf
 import matplotlib.pyplot as plt
 import librosa
 import librosa.display
+import os
 
 synth = sa.Architecture('root', np.zeros(8) + 1.0)
 fs = 44100
 path1 = 'analysis_files/orig_param_sweep/'
 path2 = 'analysis_files/predict_and_sweep/'
 path3 = 'analysis_files/feedback/'
+
+if not os.path.exists(path1) :
+    os.makedirs(path1)
+
+if not os.path.exists(path2) :
+    os.makedirs(path2)
+
+if not os.path.exists(path3) :
+    os.makedirs(path3)
 
 n_secs = 10.0
 n_frames = synth.get_num_frames(n_secs)
@@ -41,15 +51,15 @@ params = np.zeros(8) + 1.0
 synth.update_params('root', params)
 audio = synth.generate_audio(n_secs)[0]
 sf.write(path2+'constant_param_1_original.wav', audio, fs)
-params = params + 1.0
+params = np.zeros(8) + 2.0
 synth.update_params('root', params)
 audio = synth.generate_audio(n_secs)[0]
 sf.write(path2+'constant_param_2_original.wav', audio, fs)
-params = params + 1.0
+params = np.zeros(8) + 3.0
 synth.update_params('root', params)
 audio = synth.generate_audio(n_secs)[0]
 sf.write(path2+'constant_param_3_original.wav', audio, fs)
-params = params + 1.0
+params = np.zeros(8) + 4.0
 synth.update_params('root', params)
 audio = synth.generate_audio(n_secs)[0]
 sf.write(path2+'constant_param_4_original.wav', audio, fs)
@@ -60,15 +70,15 @@ params = np.zeros(8) + 1.0
 synth.update_params('root', params)
 audio = synth.generate_audio(n_secs)[0]
 sf.write(path2+'constant_param_1_predicted.wav', audio, fs)
-params = params + 1.0
+params = np.zeros(8) + 2.0
 synth.update_params('root', params)
 audio = synth.generate_audio(n_secs)[0]
 sf.write(path2+'constant_param_2_predicted.wav', audio, fs)
-params = params + 1.0
+params = np.zeros(8) + 3.0
 synth.update_params('root', params)
 audio = synth.generate_audio(n_secs)[0]
 sf.write(path2+'constant_param_3_predicted.wav', audio, fs)
-params = params + 1.0
+params = np.zeros(8) + 4.0
 synth.update_params('root', params)
 params2 = np.zeros((n_frames, 8)) + 2.0
 params2[:, 3 ] = np.linspace(0.0, 5.0, n_frames)
