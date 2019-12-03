@@ -30,7 +30,7 @@ def parse_params(params_raw) :
     return params, audio_len
 
 # TODO perhaps i can parameterize this
-basepath = '/Users/hyrkas/eclipse-workspace/AlgoMusicHW3/scratch/' 
+basepath = '/Users/hyrkas/eclipse-workspace/AlgoMusicFinal/scratch/' 
 param_path = basepath + 'params.csv'
 wav_path = basepath + 'audio.wav'
 arch = sa.Architecture('root', np.zeros(8) + 1.0)
