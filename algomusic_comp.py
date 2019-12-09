@@ -31,10 +31,10 @@ def parse_params(params_raw) :
 
     return params, audio_len, pitch_shift
 
-# TODO perhaps i can parameterize this
 basepath = '/Users/hyrkas/eclipse-workspace/AlgoMusicFinal/scratch/' 
 param_path = basepath + 'params.csv'
 wav_path = basepath + 'audio.wav'
+done_path = basepath + 'done'
 arch = sa.Architecture('root', np.zeros(8) + 1.0)
 
 # very hacky
@@ -45,6 +45,8 @@ while True :
         arch.update_params('root', params)
         audio = arch.generate_audio(audio_len, pitch_shift)[0]
         sf.write(wav_path, audio, 44100)
+        f = open(done_path, 'w')
+        f.close()
         os.remove(param_path)
     time.sleep(0.1)
 
