@@ -87,7 +87,7 @@ audio = synth.generate_audio(n_secs)[0]
 sf.write(path2+'constant_param_4_predicted_sweep.wav', audio, fs)
 
 # feedback effect
-synth.update_params('root', np.zeros(8) + 1.0)
+synth.update_params('root', np.zeros(8) + 3.0)
 synth.update_params('pred', None)
 feedback_amounts = [0, 25, 50, 75, 90]
 for fa in feedback_amounts :

@@ -101,12 +101,14 @@ class ComposeUtility :
             tmp_mag = np.hstack((in_frame.transpose(), mag_buf[:,i].reshape(input_frames.shape[0], 1)))
             pred_audio = do_rtpghi_gaussian_window(tmp_mag, self.len_window, self.hop_length)
             pred_audio = (pred_audio / np.max(np.abs(pred_audio)))
-            #in_audio = np.append(in_audio[5:], pred_audio[-5:])
+            # input audio is appended to predicted audio so there are at least two STFT frames
+            # as a result, predicted audio actually appears in the middle of the array
             in_audio = np.append(in_audio[5:], pred_audio[len(pred_audio)//2:len(pred_audio)//2+5])
 
         sig = do_rtpghi_gaussian_window(mag_buf, self.len_window, self.hop_length)
         return sig
 
+    # two analysis files
     def predict_and_get_middle_weights(self, audio, weights = None) :
         input_frames = self.get_input_frames(audio)
         num_frames = input_frames.shape[1]
@@ -125,6 +127,12 @@ class ComposeUtility :
             self.synth.reassign_middle_weights(np.zeros(8))
             
         return middle_weights
+
+    def check_encoding(self, params) :
+        in_frame = self.synth.generate_audio(params, bass_boost = False)
+        in_frame /= np.max(in_frame)
+        encoding = self.synth.predict_and_get_middle_weights(in_frame)
+        return encoding
 
     # mag frames for input audio, used for prediction
     def get_input_frames(self, audio) :
