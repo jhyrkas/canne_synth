@@ -8,10 +8,11 @@ import scipy
 
 np.random.seed(20855144)
 path = 'comp3_audio/'
-os.mkdir(path)
+if not os.path.exists(path) :
+    os.mkdir(path)
 
 # ARCHITECTURE
-a = sa.synth_architecture('root', np.zeros(8))
+a = sa.Architecture('root', np.zeros(8))
 a.add_network('channel1_carr', 'root')
 a.add_network('channel2_pred', 'root', predictive_feedback_mode=True)
 a.add_network('channel3_carr', 'root')
@@ -27,7 +28,7 @@ carr_names = ['channel1_carr', 'channel3_carr', 'channel4_car']
 def gen_params(time, frames, low, high, osc, freq, phase) :
     ohm = np.linspace(0, time, frames) * 2.0 * np.pi + phase
     if osc == 'sin' :
-        sig = numpy.sin(ohm)
+        sig = np.sin(ohm)
     elif osc == 'square' :
         sig = scipy.signal.square(ohm)
     elif osc == 'saw' :
@@ -39,7 +40,7 @@ def gen_params(time, frames, low, high, osc, freq, phase) :
 
 osces = ['sin', 'square', 'saw', 'triangle']
 audio_length = 30
-nframes = sa.get_num_frames(audio_length)
+nframes = a.get_num_frames(audio_length)
 params = np.zeros((nframes, 8))
 pitches = np.linspace(-24, 12, 12) 
 
@@ -49,7 +50,7 @@ for i in range(1, 11) :
         lo,hi = np.random.random(2) * 4.0
         if lo > hi :
             lo,hi = hi,lo
-        osc = osces[np.randint(4)]
+        osc = osces[np.random.randint(4)]
         freq = np.random.random()
         phase = np.random.random() * 2.0 * np.pi
         params[:,j] = gen_params(audio_length, nframes, lo, hi, osc, freq, phase)
@@ -61,11 +62,11 @@ for i in range(1, 11) :
             lo,hi = np.random.random(2) * 10.0
             if lo > hi :
                 lo,hi = hi,lo
-            osc = osces[np.randint(4)]
+            osc = osces[np.random.randint(4)]
             freq = np.random.random()
             phase = np.random.random() * 2.0 * np.pi
             params[:,j] = gen_params(audio_length, nframes, lo, hi, osc, freq, phase)
         a.update_params(carrier, params)
     channels = a.generate_audio(audio_length, pitches[i])
     for channel in range(5) :
-        sf.write(path + 'channel' + channel + '_' + str(i) + '.wav', channels[channel], 44100)
+        sf.write(path + 'channel' + str(channel+1) + '_' + str(i) + '.wav', channels[channel], 44100)
