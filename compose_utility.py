@@ -156,10 +156,6 @@ class ComposeUtility :
         spec = librosa.core.stft(np.sin(2*np.pi*np.linspace(0, length, self.fs*length)), n_fft = self.len_window, hop_length = self.hop_length)
         return spec.shape[1]
 
-    # TODO: add dreaming effect
-    def lstm_feedback(self, audio, length) :
-        pass
-
     # shift is given in fractional half steps, per the librosa algorithm
     def change_pitch(self, audio, shift) :
         return pitch_shift(audio, self.fs, shift)
