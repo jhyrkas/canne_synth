@@ -7,6 +7,7 @@ import os
 import scipy
 
 np.random.seed(20855144)
+#np.random.seed(212)
 path = 'comp3_audio/'
 if not os.path.exists(path) :
     os.mkdir(path)
@@ -47,7 +48,7 @@ pitches = np.linspace(-24, 12, 12)
 for i in range(1, 11) :
     # root params
     for j in range(8) :
-        lo,hi = np.random.random(2) * 4.0
+        lo,hi = np.random.random(2) * (3.9 + i / 10)
         if lo > hi :
             lo,hi = hi,lo
         osc = osces[np.random.randint(4)]
@@ -59,7 +60,7 @@ for i in range(1, 11) :
     # carrier params
     for carrier in carr_names :
         for j in range(8) :
-            lo,hi = np.random.random(2) * 10.0
+            lo,hi = np.random.random(2) *  (8.0 + i * 2.0)
             if lo > hi :
                 lo,hi = hi,lo
             osc = osces[np.random.randint(4)]
@@ -68,5 +69,11 @@ for i in range(1, 11) :
             params[:,j] = gen_params(audio_length, nframes, lo, hi, osc, freq, phase)
         a.update_params(carrier, params)
     channels = a.generate_audio(audio_length, pitches[i])
+    assert(len(channels) == 5)
     for channel in range(5) :
         sf.write(path + 'channel' + str(channel+1) + '_' + str(i) + '.wav', channels[channel], 44100)
+
+
+# ONE LAST DRONE
+a.update_params('root', np.random.random(8) * 4.0)
+sf.write(path + 'drone.wav', a.generate_audio(300, -18)[1], 44100)
