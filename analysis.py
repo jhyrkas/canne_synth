@@ -11,6 +11,7 @@ fs = 44100
 path1 = 'analysis_files/orig_param_sweep/'
 path2 = 'analysis_files/predict_and_sweep/'
 path3 = 'analysis_files/feedback/'
+path4 = 'analysis_files/predictive_feedback/'
 
 if not os.path.exists(path1) :
     os.makedirs(path1)
@@ -20,6 +21,9 @@ if not os.path.exists(path2) :
 
 if not os.path.exists(path3) :
     os.makedirs(path3)
+
+if not os.path.exists(path4) :
+    os.makedirs(path4)
 
 n_secs = 10.0
 n_frames = synth.get_num_frames(n_secs)
@@ -104,6 +108,11 @@ audio = synth.generate_audio(n_secs)[1]
 sf.write(path3+'predictive_feedback.wav', audio, fs)
 audio = synth.generate_audio(n_secs*3)[1]
 sf.write(path3+'predictive_feedback_30sec.wav', audio, fs)
+
+for i in range(4) :
+    synth.update_params('root', np.random.random(8) * 4.0)
+    audio = synth.generate_audio(60)[1]
+    sf.write(path4+'predictive_feedback_' + str(i) + '.wav', audio, fs)
 
 # analysis
 
@@ -205,3 +214,15 @@ plt.colorbar(format='%+2.0f dB')
 plt.tight_layout()
 plt.savefig(path3+'predictive_feedback_30sec_stft.pdf')
 plt.clf()
+
+for i in range(4) :
+    y, sr = librosa.load(path4+'predictive_feedback_' + str(i) + '.wav', sr=None)
+    S = librosa.stft(y)
+    db = librosa.amplitude_to_db(np.abs(S), ref=np.max)
+    librosa.display.specshow(db, x_axis='time', y_axis='log', sr=sr)
+    plt.title('Predictive feedback')
+    plt.colorbar(format='%+2.0f dB')
+    plt.xlim(45, 60)
+    plt.tight_layout()
+    plt.savefig(path4+'predictive_feedback_' + str(i) + '.pdf')
+    plt.clf()
