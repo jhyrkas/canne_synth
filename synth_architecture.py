@@ -1,24 +1,27 @@
 import compose_utility
 import numpy as np
 
-class ModeError(Exception):
-    def __init__(self, mode) :
-        if mode == 0 :
-            self.message = 'modular network cannot use method generate_audio_car'
-        else :
-            self.message = 'carrier network cannot use method generate_audio_mod'
-
+# NOTE: a pass network is a special case. essentially, if you want to modulate a network
+# using a root network, and also get audio from the root network, you should add a pass
+# network with root as its modulator. example below:
+# a = Architecture('root', np.zeros(8)
+# a.add_network('carrier', 'root')
+# a.add_network('passthrough', 'root', passthrough_network = True)
+# channels = a.generate_audio(5)
+# channels[0] is the carrier audio, channels[1] is the root audio
 class OscillatorNetwork :
     def __init__(self, name, mode, comp_utility, params, feedback = 0.0) :
-        if not (mode == 'mod' or mode == 'carr' or mode == 'pred') :
+        if not (mode == 'mod' or mode == 'carr' or mode == 'pred' or mode == 'pass') :
             raise ValueError('invalid mode')
         self.name = name
         if mode == 'mod' :
             self.mode = 0
         elif mode == 'carr' :
             self.mode = 1
-        else :
+        elif mode == 'pred' :
             self.mode = 2
+        else :
+            self.mode = 3
         self.cu = comp_utility
         self.prev_frame = np.zeros((1, self.cu.out_size))
         if self.mode == 1 :
@@ -26,20 +29,28 @@ class OscillatorNetwork :
         self.outputNets = []
         self.params = params
 
+    def generate_audio(self, param) :
+        if self.mode == 0 :
+            return self.generate_audio_mod(param)
+        elif self.mode == 3 :
+            return self.generate_audio_pass(param)
+        else :
+            return self.generate_audio_car(param)
+
     def generate_audio_mod(self, length) :
-        if self.mode == 1 or self.mode == 2 :
-            raise ModeError(self.mode)
         return self.cu.make_note_osc(self.params, length)
 
     def generate_audio_car(self, audio) :
-        if self.mode == 0 :
-            raise ModeError(self.mode)
         if self.mode == 1 :
             sig,frame = self.cu.predict_audio(audio, self.params, self.fr, prev_frame = self.prev_frame)
             self.prev_frame = frame
             return sig
         else :
             return self.cu.predictive_feedback(audio)
+
+    # this type of network is used so that root audio can be generated
+    def generate_audio_pass(self, audio) :
+        return audio
 
     def add_carrier(self, net_name) :
         self.outputNets.append(net_name)
@@ -67,7 +78,7 @@ class Architecture :
         self.name_to_net[root_name] = root_net
         self.env = env
 
-    def add_network(self, net_name, mod_name, net_params = None, feedback = 0.0, predictive_feedback_mode = False) :
+    def add_network(self, net_name, mod_name, net_params = None, feedback = 0.0, predictive_feedback_mode = False, passthrough_network = False) :
         if net_name in self.name_to_net :
             raise ValueError('network names must be unique')
         if mod_name not in self.name_to_net :
@@ -75,6 +86,8 @@ class Architecture :
         net = None
         if predictive_feedback_mode :
             net = OscillatorNetwork(net_name, 'pred', self.cu, net_params, feedback)
+        elif passthrough_network :
+            net = OscillatorNetwork(net_name, 'pass', self.cu, net_params, feedback)
         else :
             net = OscillatorNetwork(net_name, 'carr', self.cu, net_params, feedback)
         self.name_to_net[net_name] = net
@@ -101,11 +114,7 @@ class Architecture :
     # param is either the note length or the audio input....pretty hacky
     def generate_audio_recurse(self, net_name, param) :
         net = self.name_to_net[net_name]
-        audio = None
-        if net_name == self.root_name :
-            audio = net.generate_audio_mod(param)
-        else : 
-            audio = net.generate_audio_car(param)
+        audio = net.generate_audio(param)
 
         if len(net.get_carriers()) == 0 :
             return [audio]
