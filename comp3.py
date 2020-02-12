@@ -27,7 +27,7 @@ carr_names = ['channel1_carr', 'channel3_carr', 'channel4_car']
 # NOTES
 
 def gen_params(time, frames, low, high, osc, freq, phase) :
-    ohm = np.linspace(0, time, frames) * 2.0 * np.pi + phase
+    ohm = np.linspace(0, time, frames) * freq * 2.0 * np.pi + phase
     if osc == 'sin' :
         sig = np.sin(ohm)
     elif osc == 'square' :
@@ -75,5 +75,5 @@ for i in range(1, 11) :
 
 
 # ONE LAST DRONE
-a.update_params('root', np.random.random(8) * 4.0)
-sf.write(path + 'drone.wav', a.generate_audio(300, -18)[1], 44100)
+#a.update_params('root', np.random.random(8) * 4.0)
+#sf.write(path + 'drone.wav', a.generate_audio(300, -18)[1], 44100)
