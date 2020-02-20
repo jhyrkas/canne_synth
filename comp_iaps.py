@@ -66,7 +66,7 @@ def get_array_from_api_vals(vals) :
         for j in range(NUMCOLS) :
             if not len(row) > j :
                 break
-            str_arr[i,j] = ''.join(c for c in row[j] if c.isalpha())
+            str_arr[i,j] = row[j]
 
     return str_arr
 
@@ -239,13 +239,16 @@ if __name__ == '__main__' :
             str_arr =  get_array_from_api_vals(values)
             rows_to_check = str_arr != last_vals
             print (rows_to_check)
-            for word in str_arr[rows_to_check].flatten() :
-                if word == 'theend' :
-                    keep_looping = False
-                    break
-                elif len(word) > 0 :
-                    queues[q_index].put(word) 
-                    q_index = (q_index + 1) % 5
+            for phrase in str_arr[rows_to_check].flatten() :
+                words = phrase.split()
+                for w in words :
+                    word = ''.join(c for c in w if c.isalpha())
+                    if word == 'theend' :
+                        keep_looping = False
+                        break
+                    elif len(word) > 0 :
+                        queues[q_index].put(word) 
+                        q_index = (q_index + 1) % 5
             last_vals = str_arr
         time.sleep(5)
 
