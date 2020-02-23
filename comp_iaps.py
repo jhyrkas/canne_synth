@@ -14,21 +14,24 @@ import soundfile as sf
 import librosa
 import time
 import sys
+from select import select
 
 # imports for google code
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from oauth2client.service_account import ServiceAccountCredentials
 import pickle
 import os.path
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 # The ID and range of a sample spreadsheet.
-SAMPLE_SPREADSHEET_ID = '1uei2BUZZZj3I4Gm09VAA6JrxeRRnrWy7tcDTSWvpr_Y'
-SAMPLE_RANGE_NAME = 'A1:E6'
-NUMROWS = 6
-NUMCOLS = 5
+#SAMPLE_SPREADSHEET_ID = '1uei2BUZZZj3I4Gm09VAA6JrxeRRnrWy7tcDTSWvpr_Y'
+SAMPLE_SPREADSHEET_ID = '1ysrVMCaUbQ23foUH8_d35jKkZouEKFvthqQkqrdw6TY'
+SAMPLE_RANGE_NAME = 'A1:J25'
+NUMROWS = 25
+NUMCOLS = 10
 # MAKE SURE THESE MATCH WITH THE QUERY
 
 # function and variables for google sheets
@@ -45,12 +48,13 @@ def create_service() :
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
+            creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scopes=SCOPES)
+            #flow = InstalledAppFlow.from_client_secrets_file(
+            #    'credentials.json', SCOPES)
+            #creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
+        #with open('token.pickle', 'wb') as token:
+            #pickle.dump(creds, token)
 
     service = build('sheets', 'v4', credentials=creds)
     return service
@@ -231,14 +235,17 @@ if __name__ == '__main__' :
 
     keep_looping = True
     last_vals = np.array([[''] * NUMCOLS for i in range(NUMROWS)], dtype=object)
+
+    sheetNo = 1
+
     while keep_looping : # find a different way here
         result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID,
-                                range=SAMPLE_RANGE_NAME, majorDimension='ROWS').execute()
+                                range='Sheet'+ str(sheetNo) + '!' + SAMPLE_RANGE_NAME,
+                                majorDimension='ROWS').execute()
         values = result.get('values', [])
         if values is not None :
             str_arr =  get_array_from_api_vals(values)
             rows_to_check = str_arr != last_vals
-            print (rows_to_check)
             for phrase in str_arr[rows_to_check].flatten() :
                 words = phrase.split()
                 for w in words :
@@ -250,7 +257,16 @@ if __name__ == '__main__' :
                         queues[q_index].put(word) 
                         q_index = (q_index + 1) % 5
             last_vals = str_arr
-        time.sleep(5)
+        timeout = 5
+        rlist, _, _ = select([sys.stdin], [], [], timeout)
+        if rlist:
+            s = sys.stdin.readline()
+            try :
+                sheetNo = int(s)
+                if sheetNo < 1 or sheetNo > 4 :
+                    sheetNo = 1
+            except :
+                print('weird input')
 
     #queue.put(None)
     for i in [0,1,2,3,4] :

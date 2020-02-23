@@ -152,8 +152,9 @@ class ComposeUtility :
 
     # utility function
     def get_num_frames(self, length) :
-        # generate a nonsense signal, just need to get 
-        spec = librosa.core.stft(np.sin(2*np.pi*np.linspace(0, length, self.fs*length)), n_fft = self.len_window, hop_length = self.hop_length)
+        # generate a nonsense signal, just need to get num_frames
+        l = int(self.fs*length)
+        spec = librosa.core.stft(np.sin(2*np.pi*np.linspace(0, length, l)), n_fft = self.len_window, hop_length = self.hop_length)
         return spec.shape[1]
 
     # shift is given in fractional half steps, per the librosa algorithm
