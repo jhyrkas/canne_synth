@@ -120,7 +120,12 @@ def handle_params(q, device, mode) :
             arch.update_feedback('car', params['feedback'])
             mono = arch.generate_audio(params['length'], params['pitch'])[0]
             reverb = scipy.signal.fftconvolve(mono, reverb_sig)
-            mono = (reverb / np.max(np.abs(reverb))) * np.max(np.abs(mono)) # normalize to original volume
+            attack_level = params['envelope'][1]
+            if params['envelope'] == 'exp' :
+                attack_level = 1.0
+            mono = (reverb / np.max(np.abs(reverb))) * attack_level # normalize to attack level
+            #mono = np.clip(mono * 1.5, -1., 1.)
+
             #mono = arch.generate_audio(params['length'], params['pitch'])[0]
             audio = np.zeros((mono.shape[0], 2))
             if mode == 0 :

@@ -1,0 +1,6 @@
+model_checkpoint_path: "my-model-391"
+all_model_checkpoint_paths: "my-model-351"
+all_model_checkpoint_paths: "my-model-361"
+all_model_checkpoint_paths: "my-model-371"
+all_model_checkpoint_paths: "my-model-381"
+all_model_checkpoint_paths: "my-model-391"

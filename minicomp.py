@@ -32,7 +32,7 @@ outsig = np.zeros((44100*16*8,2))
 note1 = np.array([1.4, 2.3, 3.2, 2.8, 1.4, 1.3, 1.2, 1.9])
 note2 = np.array([1.4, 1.5, 3.2, 2.8, 1.4, 2.3, 1.2, 1.9])
 note3 = np.array([1.4, 1.5, 1.8, 2.5, 1.,  0.8, 1.,  1.])
-num_frames = cu.get_num_frames_depr(4)
+num_frames = cu.get_num_frames_dep(4)
 params = np.zeros((8, num_frames))
 for i in range(num_frames) :
     if i <= (3/8*num_frames) :
@@ -126,7 +126,7 @@ outsig[7*len(melody):7*len(melody)+len(final_pred), 1] += 0.66 * final_pred
 
 # SECTION 0: INTRO & OUTRO
 intro_sig = np.zeros((44100*20,2))
-num_frames = cu.get_num_frames_depr(20)
+num_frames = cu.get_num_frames_dep(20)
 intro_params = np.zeros((8, num_frames))
 for i in range(8) :
     intro_params[i,:] = drunk_walk(num_frames, 0, 4, .07, np.random.random()*4.0)
@@ -162,7 +162,7 @@ mv = np.max(outsig)
 outsig /= mv
 
 # write to file
-sf.write('minicomp.wav', outsig, 44100, subtype='PCM_16')
+sf.write('minicomp_nsynth2.wav', outsig, 44100, subtype='PCM_16')
 
 # play
 #sd.play(outsig, 44100)

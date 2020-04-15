@@ -1,3 +1,6 @@
+from tensorflow.python.util import deprecation
+deprecation._PRINT_DEPRECATION_WARNINGS = False
+
 import tensorflow as tf 
 import numpy as np 
 import matplotlib
@@ -12,8 +15,12 @@ import soundfile as sf
 from time import time
 from tqdm import tqdm
 
+# only errors are printed
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 # TODO : in the future, migrate from tensorflow v1
 tf.compat.v1.disable_eager_execution()
+#tf.disable_v2_behavior()
 
 def do_rtpghi_gaussian_window(mag,len_window,hop_length_):
         threshold = 1e-3
@@ -46,7 +53,7 @@ def do_rtpghi_gaussian_window(mag,len_window,hop_length_):
 class Topology:
         def __init__(self,input_size):
 
-                print('input size = ' + str(input_size))
+                #print('input size = ' + str(input_size))
 
                 ##Calculated Below
                 self.fc = np.zeros((15)).astype(int)
@@ -56,9 +63,12 @@ class Topology:
                 self.input_size = input_size
 
                 ##Constant Values belonging to topology:
-                self.chkpt_name = 'checkpoints'
+                #self.chkpt_name = 'checkpoints_allframes'
+                self.chkpt_name = 'checkpoints_nsynth_train'
+                #self.chkpt_name = 'checkpoints_nsynth_validtest'
+                #self.chkpt_name = 'checkpoints_IRMAS'
                 self.min_HL = 8
-                self.epochs = 300 #Number of epochs the ANN is trained for - 300 should be sufficient
+                self.epochs = 400 #Number of epochs the ANN is trained for - 300 should be sufficient
                 self.learning_rate_adam = 1e-3 #ADAM learning rate - 1e-3 was found to produce robust ANNs
                 self.l2_lamduh = 1e-10 #Lamda value for L1 Regularization
                 self.batch_size = 100 #Typical batch size for ADAM useage
@@ -120,8 +130,12 @@ class ANNeSynth:
 
         def loadDataSet(self):
                 #Loading 95,443 Magnitude STFT frames saved as .npy (Loading in data)
-                filename = 'all_frames.npy'     #5 Octave Static Data used for training net
+                # filename = 'all_frames.npy'     #5 Octave Static Data used for training net
                 # filename = 'oo_all_frames.npy' #One Octave set
+                # filename = 'nsynth_subset.npy' # nsynth validation and test data
+                # filename = 'nsynth_train_subset_full.npy' # nsynth training data 5 octave C-maj
+                # filename = 'nsynth_subset.npy' # IRMAS training data
+                filename = 'donottrain.npy' # DON'T TRAIN! this is a small dataset that is meant to help spin things up faster
                 data_path = os.path.join(os.getcwd(),filename)
                 self.frames = np.load(data_path)
                 self.frames = np.asarray(self.frames)
@@ -137,13 +151,15 @@ class ANNeSynth:
                 #self.frames = np.hstack((self.frames, second_diff))
                 # self.frames = np.hstack((self.frames,mfcc_append))
                 #self.frames = np.hstack((self.frames,mel_append))
-                print(np.shape(self.frames))
+                #print(np.shape(self.frames))
 
                 #Five Octave Dataset
-                self.validate = self.frames[84712:,:]
+                # self.validate = self.frames[84712:,:]
                 #One Octave Dataset
                 # self.validate = self.frames[17998:,:]
-                
+                #NSynth / IRMAS
+                self.validate = self.frames[int(self.frames.shape[0] * .8):int(self.frames.shape[0] * .9),:]
+
                 self.topology = Topology(np.shape(self.frames)[1])
 
         def recurseThroughLayer(self,layer,i,desired_stop):
@@ -172,20 +188,24 @@ class ANNeSynth:
                 self.paramLayer = self.recurseThroughLayer(initialLayer, 1, 7) 
 
         def trainNeuralNetwork(self):
-                self.saver = tf.train.Saver()
+                self.saver = tf.compat.v1.train.Saver()
                 #Splitting self.frames into different buffers
                 #Five Octave Dataset
-                train = self.frames[:78991,:]
-                test = self.frames[78991:84712,:]
-                validate = self.frames[84712:,:]
+                # train = self.frames[:78991,:]
+                # test = self.frames[78991:84712,:]
+                # validate = self.frames[84712:,:]
                 #One Octave Dataset
                 # train = self.frames[:16685,:]
                 # test = self.frames[16685:17998,:]
                 # validate = self.frames[17998:,:]
-                
+                #NSynth / IRMAS
+                train = self.frames[:int(self.frames.shape[0]*0.8),:]
+                validate = self.frames[int(self.frames.shape[0] * .8):int(self.frames.shape[0] * .9),:]
+                test = self.frames[int(self.frames.shape[0]*.9):,:]
+
                 #Generating Parameters for the Neural Network and Initializing the Net
                 total_batches = int(len(train)/self.topology.batch_size) #Number of batches per epoch
-                l2 = tf.reduce_sum(tf.get_collection('l2')) 
+                l2 = tf.reduce_sum(tf.compat.v1.get_collection('l2')) 
                 # loss2 = tf.reduce_mean(tf.pow(y_ - output_, 2)) # MSE error
                 
                 subt = self.y_ - self.outputLayer
@@ -195,11 +215,11 @@ class ANNeSynth:
                 self.loss3 = tf.reduce_mean(arg1)
                 self.loss4 = tf.reduce_mean(tf.abs(subt))
                 loss = self.loss2+self.topology.l2_lamduh*l2 #Imposing L2 penalty
-                train_step = tf.train.AdamOptimizer(self.topology.learning_rate_adam).minimize(loss)
+                train_step = tf.compat.v1.train.AdamOptimizer(self.topology.learning_rate_adam).minimize(loss)
 
                 ###Loads the trained neural network into memory
                 if self._operationMode.new_init:
-                        self._sess.run(tf.global_variables_initializer())
+                        self._sess.run(tf.compat.v1.global_variables_initializer())
                 else:
                         ckpt = tf.train.latest_checkpoint(self.topology.chkpt_name) 
                         self.saver.restore(self._sess, ckpt)
@@ -248,12 +268,12 @@ class ANNeSynth:
                         print('Plotting Finished')
 
         def execute(self,values,filename='long', writeVal = True, returnVal = False):
-                self.saver = tf.train.Saver()
+                self.saver = tf.compat.v1.train.Saver()
                 if not self._operationMode.train:
                         ckpt = tf.train.latest_checkpoint(self.topology.chkpt_name) 
                         self.saver.restore(self._sess, ckpt)
                 else:
-                        self.saver = tf.train.Saver()
+                        self.saver = tf.compat.v1.train.Saver()
                         print('hi')
                         self.trainNeuralNetwork()
 

@@ -44,7 +44,7 @@ class ComposeUtility :
     # prev_frame will be for successive calls to predict audio, perhaps...
     # use_prev_frame will be deprecated
     def predict_audio(self, audio, params = None, feedback_rate = 0, use_prev_frame = False, prev_frame = None) :
-        input_frames = self.get_input_frames(audio)
+        input_frames = self.get_input_frames(np.asfortranarray(audio))
         num_frames = input_frames.shape[1]
         mag_buf = np.zeros(input_frames.shape)
         feedback_frame = np.zeros((1, self.out_size))
