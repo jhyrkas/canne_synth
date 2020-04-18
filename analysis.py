@@ -38,14 +38,14 @@ sf.write(path3+'root_audio.wav', audio, fs)
 
 for i in range (8) :
     params = np.zeros((n_frames, 8))
-    params[:, i ] = np.linspace(0.0, 5.0, n_frames)
+    params[:, i ] = np.linspace(0.0, 4.0, n_frames)
     synth.update_params('root', params)
     audio = synth.generate_audio(n_secs)[0]
     sf.write(path1+'param'+str(i)+'_zero_start.wav', audio, fs)
 
 for i in range (8) :
     params = np.zeros((n_frames, 8)) + 2.0
-    params[:, i ] = np.linspace(0.0, 5.0, n_frames)
+    params[:, i ] = np.linspace(0.0, 4.0, n_frames)
     synth.update_params('root', params)
     audio = synth.generate_audio(n_secs)[0]
     sf.write(path1+'param'+str(i)+'_two_start.wav', audio, fs)
@@ -85,7 +85,7 @@ sf.write(path2+'constant_param_3_predicted.wav', audio, fs)
 params = np.zeros(8) + 4.0
 synth.update_params('root', params)
 params2 = np.zeros((n_frames, 8)) + 2.0
-params2[:, 3 ] = np.linspace(0.0, 5.0, n_frames)
+params2[:, 3 ] = np.linspace(0.0, 4.0, n_frames)
 synth.update_params('pred', params2)
 audio = synth.generate_audio(n_secs)[0]
 sf.write(path2+'constant_param_4_predicted_sweep.wav', audio, fs)
