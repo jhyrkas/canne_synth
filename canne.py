@@ -63,8 +63,8 @@ class Topology:
                 self.input_size = input_size
 
                 ##Constant Values belonging to topology:
-                #self.chkpt_name = 'checkpoints_allframes'
-                self.chkpt_name = 'checkpoints_nsynth_train'
+                self.chkpt_name = 'checkpoints_allframes'
+                #self.chkpt_name = 'checkpoints_nsynth_train'
                 #self.chkpt_name = 'checkpoints_nsynth_validtest'
                 #self.chkpt_name = 'checkpoints_IRMAS'
                 self.min_HL = 8

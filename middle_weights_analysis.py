@@ -5,6 +5,8 @@ from matplotlib.animation import FuncAnimation
 #import librosa
 #import librosa.display
 
+#plt.rcParams['animation.convert_path'] = '/usr/local/var/homebrew/linked/imagemagick'
+
 cu = compose_utility.ComposeUtility()
 length = cu.get_num_frames(5.0)
 path = 'analysis_files/middle_weights/'
@@ -30,7 +32,8 @@ def update(i) :
     return line1, line2
 
 anim = FuncAnimation(fig, update, frames = np.arange(0, length), interval = 50)
-anim.save(path+'params.gif', dpi=8)
+#anim.save(path+'params.gif', dpi=8)
+anim.save(path+'params.gif', dpi=8, writer='imagemagick')
 plt.clf()
 
 params = np.zeros((length, 8)) + 1.0
